@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Задание: Интерактивная карточка (JS)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+[style*="JetBrains"],code,pre,.code-editor,.solution-code,.tag,.section-title,.steps li::before,.task-list li::before,.deadline,.editor-label,.btn,.progress-text,.warn-title,.check-label code{font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+body{background:#050d12;color:#f0f7fb;font-family:'Inter',sans-serif;line-height:1.6;min-height:100vh;display:flex;justify-content:center;padding:40px 20px;overflow-x:hidden}
+.page{max-width:720px;width:100%}
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;padding:4px 10px;border-radius:4px;color:#2dd4e4;background:rgba(45,212,228,.12);border:1px solid rgba(45,212,228,.25);margin-bottom:14px}
+h1{font-size:clamp(24px,4vw,32px);font-weight:700;line-height:1.2;margin-bottom:8px}
+.subtitle{font-size:15px;color:#7a9bb0;margin-bottom:20px}
+.task-card{background:linear-gradient(135deg,#0f1c25 0%,#162636 100%);border:1.5px solid #2dd4e4;border-radius:10px;padding:24px 26px;margin-bottom:20px;position:relative;overflow:hidden}
+.task-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2dd4e4,#c45cdb)}
+.task-desc{font-size:15px;line-height:1.7;margin-bottom:16px}
+.task-desc strong{color:#2dd4e4}
+.task-list{list-style:none;counter-reset:task;margin-bottom:16px}
+.task-list li{counter-increment:task;padding-left:30px;position:relative;margin-bottom:8px;font-size:14px;line-height:1.6}
+.task-list li::before{content:counter(task);position:absolute;left:0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#050d12;background:#2dd4e4;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;top:1px}
+.deadline{display:inline-flex;align-items:center;gap:8px;background:rgba(196,92,219,.15);border:1px solid rgba(196,92,219,.3);border-radius:6px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e0b0f0;margin-top:4px}
+.progress-wrap{margin-bottom:28px}
+.progress-bar{height:6px;background:#1e3548;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#2dd4e4,#c45cdb);border-radius:3px;transition:width .4s ease}
+.progress-text{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7a9bb0;margin-top:6px;text-align:right}
+.section{background:#0f1c25;border:1px solid #1e3548;border-radius:8px;padding:22px 24px;margin-bottom:16px}
+.section-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#7a9bb0;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:#1e3548}
+.checklist{list-style:none}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #1e354833;cursor:pointer;user-select:none;transition:opacity .2s}
+.check-item:last-child{border:none}
+.check-item:hover{opacity:.85}
+.check-box{flex-shrink:0;width:18px;height:18px;border:1.5px solid #1e3548;border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:transparent}
+.check-item.done .check-box{background:#2dd4e4;border-color:#2dd4e4}
+.check-box svg{opacity:0;transition:opacity .2s}
+.check-item.done .check-box svg{opacity:1}
+.check-item.done .check-label{text-decoration:line-through;opacity:.5}
+.check-label{font-size:14px;line-height:1.5}
+code{font-family:'JetBrains Mono',monospace;font-size:12px;background:#020810;padding:2px 6px;border-radius:3px;border:1px solid #1e3548;color:#2dd4e4}
+.editor-wrap{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.editor-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#7a9bb0;margin-bottom:6px}
+textarea.code-editor{width:100%;min-height:380px;background:#020810;border:1px solid #1e3548;border-radius:6px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:#f0f7fb;resize:vertical;outline:none;tab-size:2;transition:border-color .2s}
+textarea.code-editor:focus{border-color:#2dd4e4}
+.preview-frame{width:100%;min-height:380px;background:#111;border:3px solid #1e3548;border-radius:6px;overflow:hidden}
+.preview-frame iframe{width:100%;height:520px;border:none}
+.preview-placeholder{display:flex;align-items:center;justify-content:center;height:380px;color:#7a9bb0;font-size:13px;text-align:center;padding:20px}
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.btn{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-run{background:#2dd4e4;color:#050d12}
+.btn-run:hover{background:#5be0ed}
+.btn-check{background:#f0f7fb;color:#050d12}
+.btn-check:hover{background:#d0e8f0}
+.btn-reset{background:transparent;border:1px solid #1e3548;color:#7a9bb0}
+.btn-reset:hover{border-color:#2dd4e4;color:#2dd4e4}
+.btn-solution{background:transparent;border:1px solid rgba(196,92,219,.3);color:#c45cdb}
+.btn-solution:hover{background:rgba(196,92,219,.1)}
+.feedback{margin-top:12px;padding:12px 16px;border-radius:6px;font-size:13px;display:flex;align-items:flex-start;gap:8px;animation:fadeIn .3s ease}
+.feedback.ok{background:rgba(45,212,228,.1);border:1px solid rgba(45,212,228,.3);color:#2dd4e4}
+.feedback.fail{background:rgba(196,92,219,.1);border:1px solid rgba(196,92,219,.3);color:#c45cdb}
+.feedback ul{list-style:none;margin:0;padding:0}
+.feedback li{padding:2px 0}
+.feedback li::before{content:'×';margin-right:6px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.feedback.ok li::before{content:'✓'}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.warn{background:rgba(196,92,219,.1);border:1px solid rgba(196,92,219,.2);border-radius:8px;padding:18px 22px;margin-bottom:16px}
+.warn-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#c45cdb;margin-bottom:10px}
+.warn ul{list-style:none}
+.warn li{font-size:13px;padding:3px 0 3px 18px;position:relative;color:#c9aed4}
+.warn li::before{content:'×';position:absolute;left:0;color:#c45cdb;font-weight:700;font-family:'JetBrains Mono',monospace}
+.info-box{background:rgba(45,212,228,.06);border:1px solid rgba(45,212,228,.2);border-radius:8px;padding:18px 22px;margin-bottom:16px}
+.info-box-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#2dd4e4;margin-bottom:10px}
+.example-card{background:#0a0a0a;border:2px solid #c45cdb;border-radius:12px;padding:0;margin:16px auto;box-shadow:0 0 30px rgba(196,92,219,.15);font-family:'Inter',sans-serif;color:#f0f7fb;position:relative;overflow:hidden;max-width:360px}
+.example-card img{width:100%;height:200px;object-fit:cover;display:block}
+.example-card section{padding:20px 24px 24px}
+.example-card h2{font-size:22px;font-weight:700;margin-bottom:2px;background:linear-gradient(90deg,#c45cdb,#2dd4e4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.example-card .char-class{font-family:'JetBrains Mono',monospace;font-size:11px;color:#c45cdb;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px}
+.example-card hr{border:none;height:1px;background:linear-gradient(90deg,transparent,#1e3548,transparent);margin:14px 0}
+.example-card .stats{list-style:none;text-align:center;font-size:12px;margin:0 0 16px;padding:0}
+.example-card .stats li{display:inline-block;width:30%;text-align:center}
+.example-card strong{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#fff;display:block;transition:color 0.3s}
+.example-card small{color:#7a9bb0;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.lvl-btn{display:block;width:100%;background:#2dd4e4;color:#050d12;border:none;padding:10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.lvl-btn:hover{background:#5be0ed;transform:translateY(-2px)}
+.lvl-btn:active{transform:translateY(0)}
+.lvl-btn.success{background:#c45cdb;color:#fff}
+.solution-wrap{margin-top:12px;display:none;animation:fadeIn .3s ease}
+.solution-wrap.visible{display:block}
+.solution-code{background:#020810;border:1px solid #1e3548;border-radius:6px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#f0f7fb;overflow-x:auto;white-space:pre;max-height:500px;overflow-y:auto}
+.confetti-wrap{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;top:-10px;animation:confettiFall 2.5s ease-out forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="tag">Практическое задание</span>
+  <h1>Оживи карточку с помощью JS</h1>
+  <p class="subtitle">HTML + CSS + JavaScript — добавляем интерактивность и логику</p>
+
+  <div class="section">
+    <div class="section-title">Пример результата (накликай уровень!)</div>
+    <article class="example-card">
+      <img src="https://i.ibb.co/1YZsZN7x/photo-2026-03-16-19-58-16.jpg" alt="Кибер-Самурай">
+      <section>
+        <h2>Кибер-Самурай</h2>
+        <p class="char-class">Мечник • Уровень <span id="ex-lvl" style="color:#2dd4e4;font-weight:bold">42</span></p>
+        <hr>
+        <ul class="stats">
+          <li><strong id="ex-atk">92</strong><small>Атака</small></li>
+          <li><strong>78</strong><small>Защита</small></li>
+          <li><strong>85</strong><small>Скорость</small></li>
+        </ul>
+        <button class="lvl-btn" id="ex-btn" onclick="exampleLevelUp()">Повысить уровень</button>
+      </section>
+    </article>
+  </div>
+
+  <div class="info-box">
+    <div class="info-box-title">⚡ Как работает магия JavaScript</div>
+    <p style="font-size:13px;color:#a0c8d8">Чтобы изменить текст на странице по клику, нужно 3 шага:</p>
+    <ol style="margin-top:8px; margin-bottom:12px;">
+      <li>Дать элементу уникальное имя — атрибут <code>id="имя"</code>.</li>
+      <li>Добавить на кнопку обработчик клика — <code>onclick="мояФункция()"</code>.</li>
+      <li>Внутри тега <code>&lt;script&gt;</code> написать саму функцию.</li>
+    </ol>
+    <p style="font-size:13px;color:#a0c8d8">Внутри функции мы ищем тег и меняем его содержимое с помощью свойства <strong>innerHTML</strong>:</p>
+    <div style="background:#050d12; border:1px solid #1e3548; padding:10px; border-radius:6px; margin-top:8px;">
+      <code>document.getElementById('level')<strong style="color:#c45cdb">.innerHTML</strong> = 43;</code>
+    </div>
+    <p style="font-size:12px; color:#7a9bb0; margin-top:6px; font-style:italic">Этот код говорит: «Найди элемент с id="level" и замени то, что внутри него, на цифру 43».</p>
+  </div>
+
+  <div class="task-card">
+    <div class="section-title">Задание</div>
+    <p class="task-desc">Готовый HTML и CSS уже есть. Твоя задача — <strong>написать JavaScript</strong>.</p>
+    <ol class="task-list">
+      <li>Найди в коде <code>&lt;span&gt;</code> с числом уровня и добавь ему <code>id="level"</code></li>
+      <li>Найди <code>&lt;strong&gt;</code> с числом атаки и добавь ему <code>id="attack"</code></li>
+      <li>Добавь тегу <code>&lt;button&gt;</code> атрибут: <code>onclick="levelUp()"</code></li>
+      <li>В самом низу создай парный тег <code>&lt;script&gt;</code></li>
+      <li>Внутри скрипта напиши функцию <code>function levelUp() { ... }</code></li>
+      <li>Внутри функции получи элементы по их ID и измени их значения (уровень +1, атака +5) через свойство <code>innerHTML</code>.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Песочница</div>
+    <div class="editor-wrap">
+      <div>
+        <div class="editor-label">Твой код (Допиши JS в самом низу)</div>
+        <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+      </div>
+      <div>
+        <div class="editor-label">Превью</div>
+        <div class="preview-frame" id="previewFrame">
+          <div class="preview-placeholder">Нажми «▶ Запустить»<br>чтобы проверить логику</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn btn-run" onclick="runCode()">▶ Запустить</button>
+      <button type="button" class="btn btn-check" onclick="checkCode()">✓ Проверить код</button>
+      <button type="button" class="btn btn-solution" onclick="toggleSolution()">Показать решение</button>
+      <button type="button" class="btn btn-reset" onclick="resetCode()">↺ Сбросить</button>
+    </div>
+    <div id="feedback"></div>
+    <div class="solution-wrap" id="solutionWrap">
+      <div class="editor-label" style="margin-top:8px">Пример решения</div>
+      <div class="solution-code" id="solutionCode"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Чеклист выполнения</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">0 / 6 выполнено</div>
+    </div>
+    <ul class="checklist" id="checklist">
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">Добавлены <code>id="level"</code> и <code>id="attack"</code></span></li>
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">Кнопке добавлен <code>onclick="levelUp()"</code></span></li>
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">Создан тег <code>&lt;script&gt;</code></span></li>
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">В скрипте объявлена функция <code>function levelUp()</code></span></li>
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">Использован метод <code>document.getElementById(...)</code></span></li>
+      <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#050d12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="check-label">Использовано свойство <code>.innerHTML</code></span></li>
+    </ul>
+  </div>
+
+  <div class="warn">
+    <div class="warn-title">Частые ошибки JS</div>
+    <ul>
+      <li>Забыты скобки при вызове: написано <code>onclick="levelUp"</code> вместо <code>levelUp()</code></li>
+      <li>Опечатка: <code>getElementByID</code> (с большой D)</li>
+      <li>JS-код написан вне тега <code>&lt;script&gt;</code></li>
+      <li>Перепутаны имена ID: в HTML <code>id="lvl"</code>, а в JS поиск по <code>'level'</code></li>
+    </ul>
+  </div>
+</div>
+
+<div class="confetti-wrap" id="confetti"></div>
+
+<script>
+// --- Скрипт для примера на странице ---
+let exLevel = 42;
+let exAttack = 92;
+function exampleLevelUp() {
+  exLevel++; exAttack += 5;
+  document.getElementById('ex-lvl').innerText = exLevel;
+  let atkEl = document.getElementById('ex-atk');
+  atkEl.innerText = exAttack;
+  atkEl.style.color = '#c45cdb';
+  let btn = document.getElementById('ex-btn');
+  btn.classList.add('success');
+  btn.innerText = 'УРОВЕНЬ ПОВЫШЕН!';
+  setTimeout(() => {
+    atkEl.style.color = '#fff';
+    btn.classList.remove('success');
+    btn.innerText = 'Повысить уровень';
+  }, 800);
+}
+
+// --- Дефолтный код (верстка готова, нужен JS) ---
+const defaultCode = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Карточка персонажа</title>
+  <style>
+    body { background: #0a0a0a; color: #f0f0f0; font-family: sans-serif; padding: 20px; }
+    article { background: #111; border: 2px solid #c45cdb; border-radius: 12px; max-width: 320px; margin: 0 auto; overflow: hidden; }
+    img { width: 100%; height: 200px; object-fit: cover; }
+    section { padding: 20px; }
+    h1 { color: #c45cdb; margin: 0 0 5px; font-size: 24px; }
+    .role { color: #888; font-size: 12px; margin-bottom: 15px; }
+    .role span { color: #2dd4e4; font-weight: bold; }
+    ul { list-style: none; padding: 0; display: flex; justify-content: space-between; margin-bottom: 20px; }
+    li { text-align: center; }
+    strong { display: block; font-size: 22px; color: #2dd4e4; }
+    small { color: #888; font-size: 10px; text-transform: uppercase; }
+    button { width: 100%; padding: 12px; background: #2dd4e4; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #5be0ed; }
+  </style>
+</head>
+<body>
+
+  <article>
+    <img src="https://i.ibb.co/1YZsZN7x/photo-2026-03-16-19-58-16.jpg" alt="Герой">
+    <section>
+      <h1>Кибер-Самурай</h1>
+      <!-- 1. Добавь id="level" для тега span -->
+      <p class="role">Мечник • Уровень <span>42</span></p>
+
+      <ul>
+        <!-- 2. Добавь id="attack" для тега strong -->
+        <li><strong>92</strong><small>Атака</small></li>
+        <li><strong>78</strong><small>Защита</small></li>
+        <li><strong>85</strong><small>Скорость</small></li>
+      </ul>
+
+      <!-- 3. Добавь onclick кнопке -->
+      <button>Повысить уровень</button>
+    </section>
+  </article>
+
+  <!-- 4. Напиши тег скрипта и функцию levelUp() здесь -->
+
+</body>
+</html>`;
+
+const solutionCode = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Карточка персонажа</title>
+  <style>
+    body { background: #0a0a0a; color: #f0f0f0; font-family: sans-serif; padding: 20px; }
+    article { background: #111; border: 2px solid #c45cdb; border-radius: 12px; max-width: 320px; margin: 0 auto; overflow: hidden; }
+    img { width: 100%; height: 200px; object-fit: cover; }
+    section { padding: 20px; }
+    h1 { color: #c45cdb; margin: 0 0 5px; font-size: 24px; }
+    .role { color: #888; font-size: 12px; margin-bottom: 15px; }
+    .role span { color: #2dd4e4; font-weight: bold; }
+    ul { list-style: none; padding: 0; display: flex; justify-content: space-between; margin-bottom: 20px; }
+    li { text-align: center; }
+    strong { display: block; font-size: 22px; color: #2dd4e4; }
+    small { color: #888; font-size: 10px; text-transform: uppercase; }
+    button { width: 100%; padding: 12px; background: #2dd4e4; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #5be0ed; }
+  </style>
+</head>
+<body>
+
+  <article>
+    <img src="https://i.ibb.co/1YZsZN7x/photo-2026-03-16-19-58-16.jpg" alt="Герой">
+    <section>
+      <h1>Кибер-Самурай</h1>
+      <p class="role">Мечник • Уровень <span id="level">42</span></p>
+      <ul>
+        <li><strong id="attack">92</strong><small>Атака</small></li>
+        <li><strong>78</strong><small>Защита</small></li>
+        <li><strong>85</strong><small>Скорость</small></li>
+      </ul>
+      <button onclick="levelUp()">Повысить уровень</button>
+    </section>
+  </article>
+
+  <script>
+    let currentLevel = 42;
+    let currentAttack = 92;
+
+    function levelUp() {
+      currentLevel = currentLevel + 1;
+      currentAttack = currentAttack + 5;
+      document.getElementById('level').innerHTML = currentLevel;
+      document.getElementById('attack').innerHTML = currentAttack;
+    }
+  \x3C/script>
+
+</body>
+</html>`;
+
+document.getElementById('codeEditor').value = defaultCode;
+
+function toggleCheck(el) {
+  el.classList.toggle('done');
+  updateProgress();
+}
+
+function updateProgress() {
+  var items = document.querySelectorAll('.check-item');
+  var done = document.querySelectorAll('.check-item.done').length;
+  var total = items.length;
+  document.getElementById('progressFill').style.width = (done / total * 100) + '%';
+  document.getElementById('progressText').textContent = done + ' / ' + total + ' выполнено';
+  if (done === total) launchConfetti();
+}
+
+function runCode() {
+  var code = document.getElementById('codeEditor').value;
+  var frame = document.getElementById('previewFrame');
+  var blob = new Blob([code], { type: 'text/html; charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  frame.innerHTML = '<iframe title="preview" style="width:100%;height:520px;border:none;background:#0a0a0a"></iframe>';
+  var iframe = frame.querySelector('iframe');
+  iframe.src = url;
+  iframe.onload = function() { URL.revokeObjectURL(url); };
+}
+
+function resetCode() {
+  document.getElementById('codeEditor').value = defaultCode;
+  document.getElementById('previewFrame').innerHTML = '<div class="preview-placeholder">Нажми «▶ Запустить»<br>чтобы проверить логику</div>';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('solutionWrap').classList.remove('visible');
+}
+
+function toggleSolution() {
+  var wrap = document.getElementById('solutionWrap');
+  if (wrap.classList.contains('visible')) {
+    wrap.classList.remove('visible');
+  } else {
+    document.getElementById('solutionCode').textContent = solutionCode;
+    wrap.classList.add('visible');
+  }
+}
+
+function checkCode() {
+  var code = document.getElementById('codeEditor').value;
+  var checks = [
+    { test: /id\s*=\s*["']level["']/i.test(code), msg: 'Атрибут <code>id="level"</code> добавлен элементу' },
+    { test: /id\s*=\s*["']attack["']/i.test(code), msg: 'Атрибут <code>id="attack"</code> добавлен элементу' },
+    { test: /onclick\s*=\s*["']levelUp/i.test(code), msg: 'В кнопке есть <code>onclick="levelUp()"</code>' },
+    { test: /<script[\s>]/i.test(code) && /<\/script>/i.test(code), msg: 'Создан тег <code>&lt;script&gt;</code>' },
+    { test: /function\s+levelUp/i.test(code), msg: 'Создана функция <code>levelUp()</code>' },
+    { test: /document\.getElementById/i.test(code), msg: 'Использован <code>document.getElementById</code>' },
+    { test: /\.innerHTML|\.innerText|\.textContent/i.test(code), msg: 'Использовано свойство изменения текста' },
+  ];
+
+  var failed = checks.filter(function(c) { return !c.test; });
+  var allOk = failed.length === 0;
+
+  var html = '';
+  if (allOk) {
+    html = '<div class="feedback ok">Отлично! JS подключен и работает. Кликайте в превью, чтобы проверить!</div>';
+    launchConfetti();
+  } else {
+    html = '<div class="feedback fail"><div><strong>Чего-то не хватает (' + failed.length + '):</strong><ul>' +
+      failed.map(function(f) { return '<li>' + f.msg + '</li>'; }).join('') +
+      '</ul></div></div>';
+  }
+  document.getElementById('feedback').innerHTML = html;
+}
+
+document.getElementById('codeEditor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    var s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.substring(0, s) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = s + 2;
+  }
+});
+
+function launchConfetti() {
+  var wrap = document.getElementById('confetti');
+  wrap.innerHTML = '';
+  var colors = ['#2dd4e4','#c45cdb','#f0f7fb','#a855f7','#38bdf8'];
+  for (var i = 0; i < 60; i++) {
+    var piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    piece.style.animationDuration = (1.5 + Math.random()) + 's';
+    piece.style.width = (5 + Math.random() * 6) + 'px';
+    piece.style.height = (5 + Math.random() * 6) + 'px';
+    wrap.appendChild(piece);
+  }
+  setTimeout(function() { wrap.innerHTML = ''; }, 3000);
+}
+</script>
+</body>
+</html>
